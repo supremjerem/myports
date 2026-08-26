@@ -1,0 +1,32 @@
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved.tmp
+
+# Xcode
+xcuserdata/
+DerivedData/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+
+# macOS
+.DS_Store
+
+# Node (web/, added in Phase 3)
+node_modules/
+web/dist/
+web/coverage/
+
+# Coverage / profiling
+*.profdata
+*.profraw
+coverage.lcov
+coverage/
+
+# Secrets / local config
+.env
+*.pem
+*.p12
+*.mobileprovision
