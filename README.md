@@ -119,8 +119,7 @@ See [`docs/adr/`](docs/adr/) for the decisions behind the stack, the choice of
 ## Roadmap
 
 - [x] **Phase 0 — Setup**: repo, SwiftPM skeleton, CI (lint + test), CodeQL,
-      Dependabot, README, ADRs. _(Branch protection on `main` is pending — the
-      GitHub API gates it behind Pro for private repos; see Contributing.)_
+      Dependabot, README, ADRs, `protect-main` ruleset (PR + green CI required).
 - [x] **Phase 1 — `PortsKit`**: `lsof` runner + parser (fixtures), process
       enrichment, friendly-name heuristics, `Signaler` / `PortKiller`,
       `PortsMonitor`, full unit tests (36, green on CI). A working `portsd` CLI
@@ -139,10 +138,10 @@ See [`docs/adr/`](docs/adr/) for the decisions behind the stack, the choice of
 
 ## Contributing
 
-Work happens on `develop`; `main` takes reviewed PRs only, merged after CI is
-green. Server-enforced branch protection needs GitHub Pro on a private repo, so
-for now the rule is by convention: never push to `main` directly, always open a
-PR from `develop` or a feature branch.
+Work happens on `develop` (or feature branches off it). `main` is protected by
+the `protect-main` ruleset: changes land only through a pull request whose CI
+(`Build & test (SwiftPM)` and `swift-format lint`) is green and up to date; no
+force-pushes, no branch deletion, linear history.
 
 Commits follow [Conventional Commits](https://www.conventionalcommits.org).
 Run `swift format lint --strict --recursive Sources Tests Package.swift` and
