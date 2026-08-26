@@ -34,10 +34,10 @@ public struct ProcessInspector: ProcessInspecting {
     }
 
     static func executablePath(pid: Int32) -> String? {
-        var buffer = [CChar](repeating: 0, count: Int(MAXPATHLEN))
+        var buffer = [UInt8](repeating: 0, count: Int(MAXPATHLEN))
         let length = proc_pidpath(pid, &buffer, UInt32(buffer.count))
         guard length > 0 else { return nil }
-        return String(cString: buffer)
+        return String(decoding: buffer[0..<Int(length)], as: UTF8.self)
     }
 
     static func bsdInfo(pid: Int32) -> (parentPID: Int32, startDate: Date)? {

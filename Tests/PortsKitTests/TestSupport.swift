@@ -4,11 +4,18 @@ import Foundation
 
 /// Loads a file from `Tests/PortsKitTests/Fixtures`.
 enum Fixture {
+    struct NotFound: Error, CustomStringConvertible {
+        let name: String
+        var description: String { "missing fixture \(name)" }
+    }
+
     static func load(_ name: String) throws -> String {
-        let url = try #require(
-            Bundle.module.url(forResource: name, withExtension: nil, subdirectory: "Fixtures"),
-            "missing fixture \(name)"
-        )
+        guard
+            let url = Bundle.module.url(
+                forResource: name, withExtension: nil, subdirectory: "Fixtures")
+        else {
+            throw NotFound(name: name)
+        }
         return try String(contentsOf: url, encoding: .utf8)
     }
 }
