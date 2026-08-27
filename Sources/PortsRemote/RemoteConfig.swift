@@ -15,6 +15,8 @@ public struct RemoteConfig: Sendable {
     public var eventInterval: Duration
     /// Maximum kills accepted per token per rolling minute.
     public var killRateLimitPerMinute: Int
+    /// Directory of built web assets to serve at `/`. `nil` disables the web UI.
+    public var webRoot: URL?
 
     public static let apiVersion = 1
 
@@ -24,7 +26,8 @@ public struct RemoteConfig: Sendable {
         readOnly: Bool = false,
         dataDirectory: URL = RemoteConfig.defaultDataDirectory,
         eventInterval: Duration = .seconds(2),
-        killRateLimitPerMinute: Int = 10
+        killRateLimitPerMinute: Int = 10,
+        webRoot: URL? = nil
     ) {
         self.bindHost = bindHost
         self.port = port
@@ -32,6 +35,7 @@ public struct RemoteConfig: Sendable {
         self.dataDirectory = dataDirectory
         self.eventInterval = eventInterval
         self.killRateLimitPerMinute = killRateLimitPerMinute
+        self.webRoot = webRoot
     }
 
     /// `~/Library/Application Support/MyPorts`, or `$MYPORTS_DATA_DIR`.
@@ -61,6 +65,9 @@ public struct RemoteConfig: Sendable {
         }
         if let dir = environment["MYPORTS_DATA_DIR"], !dir.isEmpty {
             config.dataDirectory = URL(fileURLWithPath: dir, isDirectory: true)
+        }
+        if let web = environment["MYPORTS_WEB_ROOT"], !web.isEmpty {
+            config.webRoot = URL(fileURLWithPath: web, isDirectory: true)
         }
         return config
     }

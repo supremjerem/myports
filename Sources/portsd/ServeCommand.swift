@@ -27,6 +27,9 @@ extension Portsd {
         @Option(help: "Directory for tokens.json, audit.log and the TLS identity.")
         var dataDir: String?
 
+        @Option(help: "Directory of built web assets to serve at / (e.g. web/dist).")
+        var webRoot: String?
+
         func run() async throws {
             var config = RemoteConfig().applyingEnvironment()
             if lan { config.bindHost = "0.0.0.0" }
@@ -35,6 +38,9 @@ extension Portsd {
             if readonly { config.readOnly = true }
             if let dataDir {
                 config.dataDirectory = URL(fileURLWithPath: dataDir, isDirectory: true)
+            }
+            if let webRoot {
+                config.webRoot = URL(fileURLWithPath: webRoot, isDirectory: true)
             }
 
             let agent = PortsAgent(config: config)

@@ -84,4 +84,20 @@ jobs:
             -quiet \
             CODE_SIGNING_ALLOWED=NO
 
-  # web job (npm ci / lint / build / test in web/) is added in Phase 3.
+  web:
+    name: Web client
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
