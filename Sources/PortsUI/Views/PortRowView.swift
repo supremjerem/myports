@@ -83,7 +83,7 @@ struct PortRowView: View {
             .buttonStyle(.plain)
 
             killButton
-                .opacity(isHovering || phase != .idle ? 1 : 0)
+                .opacity(isHovering || phase != .idle ? 1 : 0.5)
         }
     }
 
@@ -109,9 +109,10 @@ struct PortRowView: View {
                 model.beginConfirmation(for: port)
             } label: {
                 Image(systemName: "xmark.octagon.fill")
+                    .font(.title3)
             }
             .buttonStyle(.plain)
-            .foregroundStyle(.red)
+            .foregroundStyle(isHovering ? Color.red : Color.secondary)
             .help("Kill the process on this port")
         }
     }
