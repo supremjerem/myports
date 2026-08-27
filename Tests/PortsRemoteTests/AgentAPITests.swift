@@ -18,11 +18,13 @@ struct AgentAPITests {
         dir: borrowing TempDataDir,
         readOnly: Bool = false,
         rateLimit: Int = 10,
-        signaler: RecordingSignaler = RecordingSignaler()
+        signaler: RecordingSignaler = RecordingSignaler(),
+        broker: PairingBroker = PairingBroker()
     ) -> PortsAgent {
         PortsAgent(
             config: dir.config(readOnly: readOnly, killRateLimitPerMinute: rateLimit),
             service: .stubbed(signaler: signaler),
+            broker: broker,
             logger: Self.quietLogger
         )
     }
