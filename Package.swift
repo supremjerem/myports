@@ -9,6 +9,7 @@ let package = Package(
     ],
     products: [
         .library(name: "PortsKit", targets: ["PortsKit"]),
+        .library(name: "PortsUI", targets: ["PortsUI"]),
         .executable(name: "portsd", targets: ["portsd"]),
     ],
     dependencies: [
@@ -19,12 +20,22 @@ let package = Package(
             name: "PortsKit",
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
+        .target(
+            name: "PortsUI",
+            dependencies: ["PortsKit"],
+            swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
         .executableTarget(
             name: "portsd",
             dependencies: [
                 "PortsKit",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
+            swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
+        .executableTarget(
+            name: "PortsPreviewApp",
+            dependencies: ["PortsUI"],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
         .testTarget(

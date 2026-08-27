@@ -1,0 +1,50 @@
+# Xcode project spec for the app targets. Generate with `xcodegen generate`
+# (or `make project`). The resulting MyPorts.xcodeproj is git-ignored; the
+# SwiftPM packages it consumes live in Package.swift.
+name: MyPorts
+
+options:
+  bundleIdPrefix: com.supremjerem
+  createIntermediateGroups: true
+  deploymentTarget:
+    macOS: "14.0"
+  groupSortPosition: top
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_STRICT_CONCURRENCY: complete
+    GCC_TREAT_WARNINGS_AS_ERRORS: NO
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: NO
+
+packages:
+  MyPorts:
+    path: .
+
+targets:
+  MyPorts-macOS:
+    type: application
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: Apps/MyPorts-macOS
+    dependencies:
+      - package: MyPorts
+        product: PortsKit
+      - package: MyPorts
+        product: PortsUI
+    settings:
+      base:
+        PRODUCT_NAME: MyPorts
+        PRODUCT_BUNDLE_IDENTIFIER: com.supremjerem.MyPorts
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_LSUIElement: YES
+        INFOPLIST_KEY_CFBundleDisplayName: MyPorts
+        INFOPLIST_KEY_NSHumanReadableCopyright: "Copyright © 2026 supremjerem"
+        ENABLE_HARDENED_RUNTIME: YES
+        ENABLE_APP_SANDBOX: NO
+        CODE_SIGN_ENTITLEMENTS: Apps/MyPorts-macOS/MyPorts.entitlements
+        MARKETING_VERSION: "0.1.0"
