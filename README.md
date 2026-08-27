@@ -4,37 +4,12 @@ See which TCP ports are open on your Mac, which app owns each one, and kill a
 stray dev server or free a port in two clicks — during local development and web
 testing.
 
-```mermaid
-flowchart LR
-    subgraph Core["Swift packages (build with Command Line Tools)"]
-        PK["PortsKit\nenumerate · enrich · kill · monitor"]
-        PU["PortsUI\nshared SwiftUI views"]
-        PR["PortsRemote\nHTTP+JSON · Bonjour · TLS · pairing"]
-        CLI["portsd\nCLI today · agent in Phase 3"]
-    end
-    subgraph Apps["App targets (need Xcode)"]
-        MAC["MyPorts (macOS)\nMenuBarExtra"]
-        IOS["MyPorts (iOS)\nremote client"]
-    end
-    WEB["web/\nbrowser client"]
-
-    PK --> PU
-    PK --> PR
-    PK --> CLI
-    PR --> CLI
-    PK --> MAC
-    PU --> MAC
-    PU --> IOS
-    PR --> MAC
-    PR -. HTTP .-> IOS
-    PR -. HTTP .-> WEB
-```
+![The MyPorts menu-bar popover listing listening ports with their owning process and a kill button per row](docs/screenshot.png)
 
 > Status: early development. `PortsKit`, the `portsd` CLI and the **macOS
 > menu-bar app** are implemented; the network agent, web UI, and iOS app are on
-> the roadmap below. Run `swift run PortsPreviewApp` for a windowed preview of
-> the app UI with sample data. A screenshot replaces this diagram once the app
-> ships.
+> the roadmap below. The shot above is the app UI rendered with sample data via
+> `swift run PortsPreviewApp`.
 
 ## Features
 
@@ -112,6 +87,32 @@ portsd kill 3000 --force
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    subgraph Core["Swift packages (build with Command Line Tools)"]
+        PK["PortsKit\nenumerate · enrich · kill · monitor"]
+        PU["PortsUI\nshared SwiftUI views"]
+        PR["PortsRemote\nHTTP+JSON · Bonjour · TLS · pairing"]
+        CLI["portsd\nCLI today · agent in Phase 3"]
+    end
+    subgraph Apps["App targets (need Xcode)"]
+        MAC["MyPorts (macOS)\nMenuBarExtra"]
+        IOS["MyPorts (iOS)\nremote client"]
+    end
+    WEB["web/\nbrowser client"]
+
+    PK --> PU
+    PK --> PR
+    PK --> CLI
+    PR --> CLI
+    PK --> MAC
+    PU --> MAC
+    PU --> IOS
+    PR --> MAC
+    PR -. HTTP .-> IOS
+    PR -. HTTP .-> WEB
+```
+
 Layered, with every collaborator injected so the logic tests without spawning a
 subprocess or signalling a real process:
 
@@ -144,7 +145,7 @@ See [`docs/adr/`](docs/adr/) for the decisions behind the stack, the choice of
       views, port list with search/sort/loopback filter, expandable process
       detail + established connections, kill flow (confirm → SIGTERM/SIGKILL →
       "Kill as Admin"), Settings (refresh interval, launch at login). Built via
-      XcodeGen + `xcodebuild` (CI `app-macos` job). _Screenshot pending._
+      XcodeGen + `xcodebuild` (CI `app-macos` job).
 - [ ] **Phase 3 — Agent + web**: `PortsRemote` + `portsd serve` (JSON API, SSE),
       Bonjour, self-signed TLS, QR pairing with revocable tokens, audit log,
       read-only mode, "Enable remote access" toggle in the app, minimal browser
