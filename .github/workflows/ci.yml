@@ -62,5 +62,26 @@ jobs:
       - name: Lint
         run: swift format lint --strict --recursive Sources Tests Package.swift
 
-  # apps job (xcodebuild for MyPorts-macOS / MyPorts-iOS) is added in Phase 2.
+  app-macos:
+    name: Build macOS app
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.4.app
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate project
+        run: xcodegen generate
+      - name: Build
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project MyPorts.xcodeproj \
+            -scheme MyPorts-macOS \
+            -destination 'platform=macOS' \
+            -derivedDataPath .build/dd \
+            -quiet \
+            CODE_SIGNING_ALLOWED=NO
+
   # web job (npm ci / lint / build / test in web/) is added in Phase 3.

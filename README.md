@@ -30,9 +30,11 @@ flowchart LR
     PR -. HTTP .-> WEB
 ```
 
-> Status: early development. `PortsKit` and the `portsd` CLI are implemented and
-> build today; the macOS menu-bar app, network agent, web UI, and iOS app are on
-> the roadmap below. A screenshot replaces this diagram once the app exists.
+> Status: early development. `PortsKit`, the `portsd` CLI and the **macOS
+> menu-bar app** are implemented; the network agent, web UI, and iOS app are on
+> the roadmap below. Run `swift run PortsPreviewApp` for a windowed preview of
+> the app UI with sample data. A screenshot replaces this diagram once the app
+> ships.
 
 ## Features
 
@@ -62,8 +64,19 @@ flowchart LR
 ```sh
 git clone <repo-url> myports
 cd myports
-swift build                     # builds PortsKit + the portsd CLI
-swift run portsd list           # try it
+swift build                     # PortsKit, PortsUI, portsd, PortsPreviewApp
+swift run portsd list           # try the CLI
+swift run PortsPreviewApp       # windowed preview of the app UI (sample data)
+```
+
+The macOS menu-bar app is an Xcode target. Its `MyPorts.xcodeproj` is generated
+from [`project.yml`](project.yml) with [XcodeGen](https://github.com/yonaskolb/XcodeGen)
+and is git-ignored:
+
+```sh
+brew install xcodegen
+make app                        # xcodegen generate + xcodebuild
+# then run .build/dd/Build/Products/Debug/MyPorts.app
 ```
 
 Install the CLI on your PATH:
@@ -112,6 +125,9 @@ subprocess or signalling a real process:
 | `Signaler` / `PortKiller` | protocol / value | `kill(2)` and the terminate → kill → privileged ladder. |
 | `PortsMonitor` | actor | Poll `PortScanner` on an interval, publish an `AsyncStream`. |
 | `PortsService` | value | The public entry point wiring real defaults. |
+| `PortsViewModel` | `@Observable` | (PortsUI) live snapshot + search/sort/filter + per-row kill escalation. |
+| `PortsRootView` | SwiftUI | (PortsUI) the whole popover; reused by the macOS app and, later, iOS. |
+| `MyPortsApp` | SwiftUI `App` | (Apps/MyPorts-macOS) `MenuBarExtra` scene, Settings, launch-at-login. |
 
 See [`docs/adr/`](docs/adr/) for the decisions behind the stack, the choice of
 `lsof`, and the remote-access security model.
@@ -124,9 +140,11 @@ See [`docs/adr/`](docs/adr/) for the decisions behind the stack, the choice of
       enrichment, friendly-name heuristics, `Signaler` / `PortKiller`,
       `PortsMonitor`, full unit tests (36, green on CI). A working `portsd` CLI
       (`list`, `kill`).
-- [ ] **Phase 2 — macOS menu-bar app**: `MenuBarExtra`, port list with search
-      and sort, expandable established connections, kill flow (confirm → force →
-      administrator), settings (refresh interval, launch at login).
+- [x] **Phase 2 — macOS menu-bar app**: `MenuBarExtra` popover, `PortsUI` shared
+      views, port list with search/sort/loopback filter, expandable process
+      detail + established connections, kill flow (confirm → SIGTERM/SIGKILL →
+      "Kill as Admin"), Settings (refresh interval, launch at login). Built via
+      XcodeGen + `xcodebuild` (CI `app-macos` job). _Screenshot pending._
 - [ ] **Phase 3 — Agent + web**: `PortsRemote` + `portsd serve` (JSON API, SSE),
       Bonjour, self-signed TLS, QR pairing with revocable tokens, audit log,
       read-only mode, "Enable remote access" toggle in the app, minimal browser
