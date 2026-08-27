@@ -118,11 +118,12 @@ See [`docs/adr/`](docs/adr/) for the decisions behind the stack, the choice of
 
 ## Roadmap
 
-- [ ] **Phase 0 — Setup**: repo, SwiftPM skeleton, CI (lint + test), CodeQL,
-      Dependabot, README, ADRs.
-- [ ] **Phase 1 — `PortsKit`**: `lsof` runner + parser (fixtures), process
+- [x] **Phase 0 — Setup**: repo, SwiftPM skeleton, CI (lint + test), CodeQL,
+      Dependabot, README, ADRs, `protect-main` ruleset (PR + green CI required).
+- [x] **Phase 1 — `PortsKit`**: `lsof` runner + parser (fixtures), process
       enrichment, friendly-name heuristics, `Signaler` / `PortKiller`,
-      `PortsMonitor`, full unit tests. A working `portsd` CLI (`list`, `kill`).
+      `PortsMonitor`, full unit tests (36, green on CI). A working `portsd` CLI
+      (`list`, `kill`).
 - [ ] **Phase 2 — macOS menu-bar app**: `MenuBarExtra`, port list with search
       and sort, expandable established connections, kill flow (confirm → force →
       administrator), settings (refresh interval, launch at login).
@@ -137,7 +138,11 @@ See [`docs/adr/`](docs/adr/) for the decisions behind the stack, the choice of
 
 ## Contributing
 
-Work happens on `develop`; `main` is protected and only takes reviewed PRs.
+Work happens on `develop` (or feature branches off it). `main` is protected by
+the `protect-main` ruleset: changes land only through a pull request whose CI
+(`Build & test (SwiftPM)` and `swift-format lint`) is green and up to date; no
+force-pushes, no branch deletion, linear history.
+
 Commits follow [Conventional Commits](https://www.conventionalcommits.org).
 Run `swift format lint --strict --recursive Sources Tests Package.swift` and
 `swift test` before opening a PR.
