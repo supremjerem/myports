@@ -47,6 +47,13 @@ public actor PortsMonitor {
         pollTask = nil
     }
 
+    /// Stops polling and finishes ``snapshots``, ending any `for await` loop over
+    /// it. The monitor is single-use after this; make a new one to resume.
+    public func shutdown() {
+        stop()
+        continuation.finish()
+    }
+
     public func setInterval(_ newInterval: Duration) {
         interval = newInterval
     }
