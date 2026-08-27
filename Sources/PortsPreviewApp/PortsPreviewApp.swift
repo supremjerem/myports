@@ -11,10 +11,15 @@ struct PortsPreviewApp: App {
 
     var body: some Scene {
         Window("MyPorts — Preview", id: "preview") {
-            PortsRootView(model: model)
-                .frame(width: 380, height: 560)
+            PortsRootView(
+                model: model,
+                onOpenSettings: {},
+                onQuit: {}
+            )
+            .frame(width: 380, height: 560)
         }
         .defaultSize(width: 380, height: 560)
         .windowResizability(.contentSize)
+        .windowStyle(.hiddenTitleBar)
     }
 }
