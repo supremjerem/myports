@@ -85,6 +85,40 @@ portsd kill 3000 --force
 `portsd kill` prints a clear message when the process is not yours; re-run with
 `sudo`, or use the app's "Kill as Administrator" once it exists.
 
+### Remote agent (`portsd serve`)
+
+The agent exposes the same data over HTTP+JSON so a phone or browser can view and
+kill ports. **Phase 3a: loopback only** — TLS, LAN exposure, Bonjour and QR
+pairing land in a later release.
+
+```sh
+# Create a bearer token for a client (the secret is shown once)
+portsd token add --label "my phone"
+portsd token list
+portsd token revoke <id>
+
+# Run the agent (127.0.0.1:7333 by default; --readonly blocks all kills)
+portsd serve
+portsd serve --port 8080 --readonly
+
+# Inspect what remote clients did
+portsd audit
+```
+
+API, all under `/api/v1`, bearer-authenticated except `GET /device`:
+
+| Method + path | Purpose |
+| --- | --- |
+| `GET /device` | API version, hostname, read-only flag (no auth). |
+| `GET /ports` | The current listening-port snapshot. |
+| `GET /ports/{port}/connections` | Established connections for a port. |
+| `POST /ports/{port}/kill` | `{"signal":"TERM"\|"KILL"}`; 403 in read-only; rate-limited. |
+| `GET /events` | SSE stream pushing a `ports` snapshot on every scan. |
+
+Config via env (see [`.env.example`](.env.example)): `MYPORTS_BIND`,
+`MYPORTS_PORT`, `MYPORTS_READONLY`, `MYPORTS_DATA_DIR`. Tokens (hashed) and the
+audit log live in `~/Library/Application Support/MyPorts/`.
+
 ## Architecture
 
 ```mermaid
@@ -129,6 +163,8 @@ subprocess or signalling a real process:
 | `PortsViewModel` | `@Observable` | (PortsUI) live snapshot + search/sort/filter + per-row kill escalation. |
 | `PortsRootView` | SwiftUI | (PortsUI) the whole popover; reused by the macOS app and, later, iOS. |
 | `MyPortsApp` | SwiftUI `App` | (Apps/MyPorts-macOS) `MenuBarExtra` scene, Settings, launch-at-login. |
+| `PortsAgent` | value | (PortsRemote) builds the Hummingbird app: auth, routes, SSE. |
+| `FileTokenStore` / `RateLimiter` / `FileAuditLog` | actors | (PortsRemote) hashed bearer tokens, per-token kill limit, JSONL audit trail. |
 
 See [`docs/adr/`](docs/adr/) for the decisions behind the stack, the choice of
 `lsof`, and the remote-access security model.
@@ -146,10 +182,13 @@ See [`docs/adr/`](docs/adr/) for the decisions behind the stack, the choice of
       detail + established connections, kill flow (confirm → SIGTERM/SIGKILL →
       "Kill as Admin"), Settings (refresh interval, launch at login). Built via
       XcodeGen + `xcodebuild` (CI `app-macos` job).
-- [ ] **Phase 3 — Agent + web**: `PortsRemote` + `portsd serve` (JSON API, SSE),
-      Bonjour, self-signed TLS, QR pairing with revocable tokens, audit log,
-      read-only mode, "Enable remote access" toggle in the app, minimal browser
-      client in `web/`.
+- [~] **Phase 3 — Agent + web**
+  - [x] **3a**: `PortsRemote` + `portsd serve` — JSON API, SSE `/events`, bearer
+        tokens (hashed, `portsd token …`), read-only mode, per-token kill
+        rate-limit, audit log (`portsd audit`). Loopback only. 15 tests.
+  - [ ] **3b**: self-signed TLS + pinning, Bonjour `_myports._tcp`, QR pairing,
+        opt-in LAN, "Enable remote access" toggle in the macOS app.
+  - [ ] **3c**: minimal browser client in `web/` served by the agent; CI `web` job.
 - [ ] **Phase 4 — iOS app**: device discovery + manual add, QR pairing, remote
       port list reusing `PortsUI`, remote kill, device switcher.
 - [ ] **Phase 5 — Distribution**: notarized macOS `.dmg` via CD on tags, README
