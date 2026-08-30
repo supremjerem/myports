@@ -39,6 +39,11 @@ public struct PortsAgent: Sendable {
         let router = Router(context: AgentRequestContext.self)
         router.add(middleware: LogRequestsMiddleware(.info))
 
+        if let webRoot = config.webRoot {
+            router.add(
+                middleware: FileMiddleware(webRoot.path, searchForIndexHtml: true))
+        }
+
         let device = DeviceController(config: config)
         router.get("api/v1/device", use: device.device)
 

@@ -54,6 +54,13 @@ make app                        # xcodegen generate + xcodebuild
 # then run .build/dd/Build/Products/Debug/MyPorts.app
 ```
 
+The browser client lives in [`web/`](web/) (TypeScript + Vite):
+
+```sh
+cd web && npm ci && npm run build   # → web/dist, serve via `portsd serve --web-root`
+npm run dev                         # or hack on it against a running agent
+```
+
 Install the CLI on your PATH:
 
 ```sh
@@ -96,6 +103,8 @@ itself on the LAN via Bonjour (`_myports._tcp`).
 portsd serve
 portsd serve --lan --pair          # reachable on the LAN, print a pairing URL
 portsd serve --readonly            # viewers can look but not kill
+portsd serve --web-root web/dist   # also serve the browser client at /
+#   (build it first: cd web && npm ci && npm run build)
 
 # Tokens: pair a device with a QR from the macOS app, or mint one directly
 portsd token add --label "my phone"
@@ -203,7 +212,10 @@ See [`docs/adr/`](docs/adr/) for the decisions behind the stack, the choice of
         `_myports._tcp`, single-use QR pairing (`POST /pair`), `--lan` opt-in,
         "Remote Access" tab in the macOS app (in-process agent, QR, paired
         devices, activity). +8 tests.
-  - [ ] **3c**: minimal browser client in `web/` served by the agent; CI `web` job.
+  - [x] **3c**: `web/` — a ~5 kB TypeScript/Vite SPA (paste token → live list via
+        SSE → kill), served by the agent at `/` (`--web-root`, `FileMiddleware`).
+        `?token=` query auth for `EventSource`. CI `web` job + npm Dependabot +
+        JS CodeQL. +3 Swift tests, 5 Vitest tests.
 - [ ] **Phase 4 — iOS app**: device discovery + manual add, QR pairing, remote
       port list reusing `PortsUI`, remote kill, device switcher.
 - [ ] **Phase 5 — Distribution**: notarized macOS `.dmg` via CD on tags, README
