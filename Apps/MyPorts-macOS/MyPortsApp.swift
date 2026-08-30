@@ -11,6 +11,7 @@ struct MyPortsApp: App {
     @AppStorage(SettingsKey.loopbackOnly) private var loopbackOnly = false
 
     @State private var model = PortsViewModel()
+    @State private var remoteAccess = RemoteAccessController()
 
     var body: some Scene {
         MenuBarExtra("MyPorts", systemImage: "network") {
@@ -29,7 +30,7 @@ struct MyPortsApp: App {
         .menuBarExtraStyle(.window)
 
         Settings {
-            SettingsView()
+            SettingsView(remoteAccess: remoteAccess)
         }
     }
 

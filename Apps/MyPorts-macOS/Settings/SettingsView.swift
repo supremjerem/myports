@@ -1,6 +1,23 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @Bindable var remoteAccess: RemoteAccessController
+
+    var body: some View {
+        TabView {
+            GeneralSettingsView()
+                .tabItem { Label("General", systemImage: "gearshape") }
+            RemoteAccessView(controller: remoteAccess)
+                .tabItem {
+                    Label("Remote Access", systemImage: "antenna.radiowaves.left.and.right")
+                }
+        }
+        .frame(width: 480)
+        .frame(minHeight: 300)
+    }
+}
+
+struct GeneralSettingsView: View {
     @AppStorage(SettingsKey.refreshSeconds) private var refreshSeconds = 2.0
     @AppStorage(SettingsKey.loopbackOnly) private var loopbackOnly = false
     @AppStorage(SettingsKey.launchAtLogin) private var launchAtLogin = false
@@ -46,7 +63,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 380)
+        .frame(width: 400)
         .onAppear { launchAtLogin = LaunchAtLogin.isEnabled }
     }
 }

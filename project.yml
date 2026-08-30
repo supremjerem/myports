@@ -36,6 +36,8 @@ targets:
         product: PortsKit
       - package: MyPorts
         product: PortsUI
+      - package: MyPorts
+        product: PortsRemote
     settings:
       base:
         PRODUCT_NAME: MyPorts

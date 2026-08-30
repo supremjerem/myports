@@ -4,7 +4,9 @@ Date: 2026-08-26
 
 ## Status
 
-Accepted (design; implemented in Phase 3)
+Accepted. Implemented in Phase 3a (auth, read-only, rate limit, audit, loopback)
+and 3b (persisted self-signed TLS + fingerprint pinning, single-use pairing
+tokens, Bonjour, `--lan` opt-in).
 
 ## Context
 
