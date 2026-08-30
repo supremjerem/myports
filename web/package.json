@@ -1,0 +1,24 @@
+{
+  "name": "myports-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Minimal browser client for the MyPorts agent",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "eslint": "^9.13.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.12.2",
+    "vite": "^5.4.10",
+    "vitest": "^2.1.4"
+  }
+}

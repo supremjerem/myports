@@ -54,6 +54,13 @@ make app                        # xcodegen generate + xcodebuild
 # then run .build/dd/Build/Products/Debug/MyPorts.app
 ```
 
+The browser client lives in [`web/`](web/) (TypeScript + Vite):
+
+```sh
+cd web && npm ci && npm run build   # → web/dist, serve via `portsd serve --web-root`
+npm run dev                         # or hack on it against a running agent
+```
+
 Install the CLI on your PATH:
 
 ```sh
@@ -87,37 +94,50 @@ portsd kill 3000 --force
 
 ### Remote agent (`portsd serve`)
 
-The agent exposes the same data over HTTP+JSON so a phone or browser can view and
-kill ports. **Phase 3a: loopback only** — TLS, LAN exposure, Bonjour and QR
-pairing land in a later release.
+The agent exposes the same data over **HTTPS+JSON** (self-signed TLS) so the
+MyPorts iOS app or a browser can view and kill ports on this Mac. It advertises
+itself on the LAN via Bonjour (`_myports._tcp`).
 
 ```sh
-# Create a bearer token for a client (the secret is shown once)
+# Run the agent — 127.0.0.1:7333 over HTTPS; a cert is generated on first run
+portsd serve
+portsd serve --lan --pair          # reachable on the LAN, print a pairing URL
+portsd serve --readonly            # viewers can look but not kill
+portsd serve --web-root web/dist   # also serve the browser client at /
+#   (build it first: cd web && npm ci && npm run build)
+
+# Tokens: pair a device with a QR from the macOS app, or mint one directly
 portsd token add --label "my phone"
 portsd token list
 portsd token revoke <id>
 
-# Run the agent (127.0.0.1:7333 by default; --readonly blocks all kills)
-portsd serve
-portsd serve --port 8080 --readonly
-
-# Inspect what remote clients did
+# What did remote clients do?
 portsd audit
 ```
 
-API, all under `/api/v1`, bearer-authenticated except `GET /device`:
+API, all under `/api/v1`, bearer-authenticated except `GET /device` and
+`POST /pair`:
 
 | Method + path | Purpose |
 | --- | --- |
 | `GET /device` | API version, hostname, read-only flag (no auth). |
+| `POST /pair` | Exchange a single-use pairing token (`Bearer`) for a lasting token. |
 | `GET /ports` | The current listening-port snapshot. |
 | `GET /ports/{port}/connections` | Established connections for a port. |
 | `POST /ports/{port}/kill` | `{"signal":"TERM"\|"KILL"}`; 403 in read-only; rate-limited. |
 | `GET /events` | SSE stream pushing a `ports` snapshot on every scan. |
 
+**Security** (see [`docs/adr/0003`](docs/adr/0003-remote-access-security-model.md)):
+loopback by default, LAN only with `--lan`; always TLS with a persisted
+self-signed cert whose SHA-256 fingerprint clients pin; pairing is a single-use
+token (≈10 min TTL) exchanged for a per-client bearer token; read-only mode;
+per-token kill rate limit; every kill is written to an audit log.
+
 Config via env (see [`.env.example`](.env.example)): `MYPORTS_BIND`,
-`MYPORTS_PORT`, `MYPORTS_READONLY`, `MYPORTS_DATA_DIR`. Tokens (hashed) and the
-audit log live in `~/Library/Application Support/MyPorts/`.
+`MYPORTS_PORT`, `MYPORTS_READONLY`, `MYPORTS_DATA_DIR`. Hashed tokens, the audit
+log and the TLS identity live in `~/Library/Application Support/MyPorts/`. The
+macOS app's **Settings › Remote Access** runs the same agent in-process and shows
+the pairing QR, paired devices and recent activity.
 
 ## Architecture
 
@@ -163,8 +183,10 @@ subprocess or signalling a real process:
 | `PortsViewModel` | `@Observable` | (PortsUI) live snapshot + search/sort/filter + per-row kill escalation. |
 | `PortsRootView` | SwiftUI | (PortsUI) the whole popover; reused by the macOS app and, later, iOS. |
 | `MyPortsApp` | SwiftUI `App` | (Apps/MyPorts-macOS) `MenuBarExtra` scene, Settings, launch-at-login. |
-| `PortsAgent` | value | (PortsRemote) builds the Hummingbird app: auth, routes, SSE. |
-| `FileTokenStore` / `RateLimiter` / `FileAuditLog` | actors | (PortsRemote) hashed bearer tokens, per-token kill limit, JSONL audit trail. |
+| `PortsAgent` | value | (PortsRemote) builds the Hummingbird app: TLS, auth, routes, SSE, Bonjour. |
+| `FileTokenStore` / `RateLimiter` / `FileAuditLog` / `PairingBroker` | actors | (PortsRemote) hashed bearer tokens, per-token kill limit, JSONL audit trail, single-use pairing tokens. |
+| `IdentityStore` | enum | (PortsRemote) load/generate the persisted self-signed TLS identity + fingerprint. |
+| `RemoteAccessController` | `@Observable` | (Apps/MyPorts-macOS) runs the agent in-process; drives the Remote Access settings tab. |
 
 See [`docs/adr/`](docs/adr/) for the decisions behind the stack, the choice of
 `lsof`, and the remote-access security model.
@@ -186,9 +208,14 @@ See [`docs/adr/`](docs/adr/) for the decisions behind the stack, the choice of
   - [x] **3a**: `PortsRemote` + `portsd serve` — JSON API, SSE `/events`, bearer
         tokens (hashed, `portsd token …`), read-only mode, per-token kill
         rate-limit, audit log (`portsd audit`). Loopback only. 15 tests.
-  - [ ] **3b**: self-signed TLS + pinning, Bonjour `_myports._tcp`, QR pairing,
-        opt-in LAN, "Enable remote access" toggle in the macOS app.
-  - [ ] **3c**: minimal browser client in `web/` served by the agent; CI `web` job.
+  - [x] **3b**: self-signed TLS (persisted, fingerprint pinned), Bonjour
+        `_myports._tcp`, single-use QR pairing (`POST /pair`), `--lan` opt-in,
+        "Remote Access" tab in the macOS app (in-process agent, QR, paired
+        devices, activity). +8 tests.
+  - [x] **3c**: `web/` — a ~5 kB TypeScript/Vite SPA (paste token → live list via
+        SSE → kill), served by the agent at `/` (`--web-root`, `FileMiddleware`).
+        `?token=` query auth for `EventSource`. CI `web` job + npm Dependabot +
+        JS CodeQL. +3 Swift tests, 5 Vitest tests.
 - [ ] **Phase 4 — iOS app**: device discovery + manual add, QR pairing, remote
       port list reusing `PortsUI`, remote kill, device switcher.
 - [ ] **Phase 5 — Distribution**: notarized macOS `.dmg` via CD on tags, README

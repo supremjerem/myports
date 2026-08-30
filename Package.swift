@@ -16,6 +16,8 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.5.0"),
         .package(url: "https://github.com/hummingbird-project/hummingbird", from: "2.6.0"),
+        .package(url: "https://github.com/apple/swift-certificates", from: "1.5.0"),
+        .package(url: "https://github.com/apple/swift-nio-ssl", from: "2.25.0"),
     ],
     targets: [
         .target(
@@ -32,6 +34,9 @@ let package = Package(
             dependencies: [
                 "PortsKit",
                 .product(name: "Hummingbird", package: "hummingbird"),
+                .product(name: "HummingbirdTLS", package: "hummingbird"),
+                .product(name: "X509", package: "swift-certificates"),
+                .product(name: "NIOSSL", package: "swift-nio-ssl"),
             ],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),

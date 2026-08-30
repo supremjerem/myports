@@ -14,7 +14,7 @@ jobs:
     name: Build & test (SwiftPM)
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_16.4.app
@@ -23,7 +23,7 @@ jobs:
         run: swift --version
 
       - name: Cache SwiftPM
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .build
           key: ${{ runner.os }}-spm-${{ hashFiles('Package.resolved') }}
@@ -47,7 +47,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         with:
           files: coverage.lcov
         continue-on-error: true
@@ -56,7 +56,7 @@ jobs:
     name: swift-format lint
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_16.4.app
       - name: Lint
@@ -66,7 +66,7 @@ jobs:
     name: Build macOS app
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_16.4.app
       - name: Install XcodeGen
@@ -84,4 +84,20 @@ jobs:
             -quiet \
             CODE_SIGNING_ALLOWED=NO
 
-  # web job (npm ci / lint / build / test in web/) is added in Phase 3.
+  web:
+    name: Web client
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build

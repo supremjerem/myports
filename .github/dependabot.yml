@@ -15,4 +15,9 @@ updates:
     commit-message:
       prefix: "ci"
 
-  # npm (web/) is added in Phase 3.
+  - package-ecosystem: npm
+    directory: "/web"
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "build"
